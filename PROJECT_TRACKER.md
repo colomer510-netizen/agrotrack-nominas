@@ -5,6 +5,7 @@
 - **Progreso:** Estableciendo bases documentales, diagramas y andamiaje de software.
 
 ## Historial de Cambios (Changelog)
+- **07-08-2026:** Implementación completa del Historial de transacciones y Contabilidad con exportación a Excel. Desarrollo de Configuración Global (Monedas, Tarifas Base). Corrección de renderizado CSS en Tailwind v4. Creación de respaldo completo y hoja de ruta para sincronización SQLite.
 - **31-07-2026:** Creación de la estructura base del proyecto, diagramas de arquitectura y PROJECT_TRACKER.md. Configuración inicial de Clean Architecture para Backend y Feature Modules para Frontend.
 
 ## Lista de Tareas (To-Do)
