@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-@theme {
-  --color-*: initial;
-}
-
 @layer base {
   body {
     background-color: #0f172a; /* slate-900 */
