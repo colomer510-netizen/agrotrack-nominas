@@ -20,39 +20,62 @@ import Dexie, { type Table } from 'dexie';
  }
  
  export interface TransaccionPesaje {
-   Id?: number;
-   OperarioId: number;
-   ProductorId: number;
-   Fecha: string;
-   TipoProceso: string;
-   ConteoBolsas: number;
-   PesoBruto: number;
-   BolsasBase: number;
-   KilosExcedentes: number;
-   BolsasExtra: number;
-   TarifaAplicada: number;
-   TotalGanado: number;
-   Synced: number;
- }
- 
- export class AgroTrackDB extends Dexie {
-   productores!: Table<Productor>;
-   operarios!: Table<Operario>;
-   configuracionGlobal!: Table<ConfiguracionGlobal>;
-   transaccionesPesaje!: Table<TransaccionPesaje>;
- 
-   constructor() {
-     super('AgroTrackDB');
-     
-     // Definir el esquema (Primary Keys e Índices)
-     this.version(1).stores({
-       productores: '++Id, Codigo',
-       operarios: '++Id, CodigoInterno, Procedencia',
-       configuracionGlobal: '++Id, &Clave',
-       transaccionesPesaje: '++Id, OperarioId, ProductorId, Fecha, Synced'
-     });
-   }
- }
+  Id?: number;
+  OperarioId: number;
+  ProductorId: number;
+  Fecha: string;
+  TipoProceso: string;
+  ConteoBolsas: number;
+  PesoBruto: number;
+  BolsasBase: number;
+  KilosExcedentes: number;
+  BolsasExtra: number;
+  TarifaAplicada: number;
+  TotalGanado: number;
+  Estado?: 'Activo' | 'Cerrado';
+  Synced: number;
+}
+
+export class AgroTrackDB extends Dexie {
+  productores!: Table<Productor>;
+  operarios!: Table<Operario>;
+  configuracionGlobal!: Table<ConfiguracionGlobal>;
+  transaccionesPesaje!: Table<TransaccionPesaje>;
+
+  constructor() {
+    super('AgroTrackDB');
+    
+    // Definir el esquema (Primary Keys e Índices)
+    this.version(1).stores({
+      productores: '++Id, Codigo',
+      operarios: '++Id, CodigoInterno, Procedencia',
+      configuracionGlobal: '++Id, &Clave',
+      transaccionesPesaje: '++Id, OperarioId, ProductorId, Fecha, Synced'
+    });
+
+    // Actualización de versión 2 (Agregar estado a transacciones)
+    this.version(2).stores({
+      transaccionesPesaje: '++Id, OperarioId, ProductorId, Fecha, Estado, Synced'
+    }).upgrade(async tx => {
+      // 1. Marcar como Activos a los existentes
+      await tx.table('transaccionesPesaje').toCollection().modify(t => {
+        if(!t.Estado) t.Estado = 'Activo';
+      });
+
+      // 2. Agregar nuevas configuraciones si no existen
+      const configs = await tx.table('configuracionGlobal').toArray();
+      const keys = configs.map(c => c.Clave);
+      const toAdd = [];
+      if (!keys.includes('MONEDA')) toAdd.push({ Clave: 'MONEDA', Valor: 'C$' });
+      if (!keys.includes('PAGO_PRODUCTOR_BOLSA')) toAdd.push({ Clave: 'PAGO_PRODUCTOR_BOLSA', Valor: '0' });
+      if (!keys.includes('MODO_CIERRE')) toAdd.push({ Clave: 'MODO_CIERRE', Valor: 'Manual' });
+      
+      if (toAdd.length > 0) {
+        await tx.table('configuracionGlobal').bulkAdd(toAdd);
+      }
+    });
+  }
+}
  
  export const db = new AgroTrackDB();
  
@@ -60,7 +83,10 @@ import Dexie, { type Table } from 'dexie';
  db.on('populate', async () => {
    await db.configuracionGlobal.bulkAdd([
      { Clave: 'PESO_BOLSA', Valor: '23.0' },
-     { Clave: 'TARIFA_BASE', Valor: '15.0' }
+     { Clave: 'TARIFA_BASE', Valor: '15.0' },
+     { Clave: 'MONEDA', Valor: 'C$' },
+     { Clave: 'PAGO_PRODUCTOR_BOLSA', Valor: '0' },
+     { Clave: 'MODO_CIERRE', Valor: 'Manual' }
    ]);
  
    // Productores Demo

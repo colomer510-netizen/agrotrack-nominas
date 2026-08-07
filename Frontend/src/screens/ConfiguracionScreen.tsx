@@ -16,6 +16,9 @@ export default function ConfiguracionScreen() {
   // Estados para edición global
   const [pesoBolsa, setPesoBolsa] = useState('');
   const [tarifaBase, setTarifaBase] = useState('');
+  const [moneda, setMoneda] = useState('C$');
+  const [pagoProductor, setPagoProductor] = useState('0');
+  const [modoCierre, setModoCierre] = useState('Manual');
 
   // Live Queries to Dexie
   const productores = useLiveQuery(() => db.productores.toArray(), []);
@@ -27,27 +30,34 @@ export default function ConfiguracionScreen() {
     if (configuracion) {
       const peso = configuracion.find(c => c.Clave === 'PESO_BOLSA')?.Valor;
       const tarifa = configuracion.find(c => c.Clave === 'TARIFA_BASE')?.Valor;
+      const mon = configuracion.find(c => c.Clave === 'MONEDA')?.Valor;
+      const pagoP = configuracion.find(c => c.Clave === 'PAGO_PRODUCTOR_BOLSA')?.Valor;
+      const modo = configuracion.find(c => c.Clave === 'MODO_CIERRE')?.Valor;
+      
       if (peso) setPesoBolsa(peso);
       if (tarifa) setTarifaBase(tarifa);
+      if (mon) setMoneda(mon);
+      if (pagoP) setPagoProductor(pagoP);
+      if (modo) setModoCierre(modo);
     }
   }, [configuracion]);
 
   const guardarConfiguracion = async () => {
     try {
-      const pesoObj = configuracion?.find(c => c.Clave === 'PESO_BOLSA');
-      const tarifaObj = configuracion?.find(c => c.Clave === 'TARIFA_BASE');
-      
-      if (pesoObj && pesoObj.Id) {
-        await db.configuracionGlobal.update(pesoObj.Id, { Valor: pesoBolsa });
-      } else {
-        await db.configuracionGlobal.add({ Clave: 'PESO_BOLSA', Valor: pesoBolsa });
-      }
+      const saveOrUpdate = async (clave: string, valor: string) => {
+        const obj = configuracion?.find(c => c.Clave === clave);
+        if (obj && obj.Id) {
+          await db.configuracionGlobal.update(obj.Id, { Valor: valor });
+        } else {
+          await db.configuracionGlobal.add({ Clave: clave, Valor: valor });
+        }
+      };
 
-      if (tarifaObj && tarifaObj.Id) {
-        await db.configuracionGlobal.update(tarifaObj.Id, { Valor: tarifaBase });
-      } else {
-        await db.configuracionGlobal.add({ Clave: 'TARIFA_BASE', Valor: tarifaBase });
-      }
+      await saveOrUpdate('PESO_BOLSA', pesoBolsa);
+      await saveOrUpdate('TARIFA_BASE', tarifaBase);
+      await saveOrUpdate('MONEDA', moneda);
+      await saveOrUpdate('PAGO_PRODUCTOR_BOLSA', pagoProductor);
+      await saveOrUpdate('MODO_CIERRE', modoCierre);
       
       alert('Configuración guardada exitosamente.');
     } catch (error) {
@@ -287,19 +297,66 @@ export default function ConfiguracionScreen() {
 
             <div className="h-px bg-slate-700/50 w-full"></div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">Tarifa Base por Bolsa</label>
-              <div className="flex items-center gap-4">
-                <span className="text-slate-500 font-bold text-xl">$</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white text-lg font-bold"
-                  value={tarifaBase}
-                  onChange={(e) => setTarifaBase(e.target.value)}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Tarifa Base por Bolsa (Pelador)</label>
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-500 font-bold text-xl">{moneda}</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white text-lg font-bold"
+                    value={tarifaBase}
+                    onChange={(e) => setTarifaBase(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Valor pagado al operario por cada bolsa completada.</p>
               </div>
-              <p className="text-xs text-slate-500 mt-2">Valor pagado al operario por cada bolsa completada (o su equivalente en kilos).</p>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Pago al Productor por Bolsa</label>
+                <div className="flex items-center gap-4">
+                  <span className="text-slate-500 font-bold text-xl">{moneda}</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white text-lg font-bold"
+                    value={pagoProductor}
+                    onChange={(e) => setPagoProductor(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Valor total que gana el productor por cada bolsa.</p>
+              </div>
+            </div>
+
+            <div className="h-px bg-slate-700/50 w-full"></div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Moneda del Sistema</label>
+                <select
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white font-medium"
+                  value={moneda}
+                  onChange={(e) => setMoneda(e.target.value)}
+                >
+                  <option value="C$">Córdobas (C$)</option>
+                  <option value="$">Dólares ($)</option>
+                </select>
+                <p className="text-xs text-slate-500 mt-2">Símbolo de moneda utilizado en los reportes.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">Modo de Guardado / Cierre</label>
+                <select
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white font-medium"
+                  value={modoCierre}
+                  onChange={(e) => setModoCierre(e.target.value)}
+                >
+                  <option value="Manual">Manual (Botón Cerrar Jornada)</option>
+                  <option value="Automático">Automático (Al guardar pesaje)</option>
+                </select>
+                <p className="text-xs text-slate-500 mt-2">Controla cómo los datos pasan al historial contable.</p>
+              </div>
             </div>
 
             <button

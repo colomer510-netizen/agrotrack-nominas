@@ -19,9 +19,22 @@ export default function PesajeScreen() {
   const productores = useLiveQuery(() => db.productores.toArray(), []);
   const operarios = useLiveQuery(() => db.operarios.toArray(), []);
   const configuracion = useLiveQuery(() => db.configuracionGlobal.toArray(), []);
+  
+  const moneda = useMemo(() => {
+    return configuracion?.find(c => c.Clave === 'MONEDA')?.Valor || 'C$';
+  }, [configuracion]);
+
+  const modoCierre = useMemo(() => {
+    return configuracion?.find(c => c.Clave === 'MODO_CIERRE')?.Valor || 'Manual';
+  }, [configuracion]);
+
   const transacciones = useLiveQuery(
     () => productorSeleccionadoId 
-      ? db.transaccionesPesaje.where('ProductorId').equals(Number(productorSeleccionadoId)).toArray()
+      ? db.transaccionesPesaje
+          .where('ProductorId')
+          .equals(Number(productorSeleccionadoId))
+          .filter(t => !t.Estado || t.Estado === 'Activo')
+          .toArray()
       : Promise.resolve([]),
     [productorSeleccionadoId]
   );
@@ -62,15 +75,18 @@ export default function PesajeScreen() {
 
     try {
       const hoy = new Date().toISOString().split('T')[0];
+      const estadoNuevo = modoCierre === 'Automático' ? 'Cerrado' : 'Activo';
       
-      // Buscar si el trabajador ya tiene un registro hoy para ESTE productor
+      // Buscar si el trabajador ya tiene un registro hoy para ESTE productor Y que esté ACTIVO
       const transaccionesProductor = await db.transaccionesPesaje
         .where('ProductorId')
         .equals(Number(productorSeleccionadoId))
         .toArray();
         
       const transaccionExistente = transaccionesProductor.find(
-        (t) => t.OperarioId === Number(operarioSeleccionadoId) && t.Fecha.startsWith(hoy)
+        (t) => t.OperarioId === Number(operarioSeleccionadoId) && 
+               t.Fecha.startsWith(hoy) && 
+               (!t.Estado || t.Estado === 'Activo')
       );
 
       if (transaccionExistente) {
@@ -87,6 +103,7 @@ export default function PesajeScreen() {
           KilosExcedentes: nuevosKilosSueltos,
           PesoBruto: kilosTotales,
           TotalGanado: totalGanado,
+          Estado: estadoNuevo,
           Fecha: new Date().toISOString() // Actualiza la hora del último cambio
         });
       } else {
@@ -106,6 +123,7 @@ export default function PesajeScreen() {
           BolsasExtra: 0,
           TarifaAplicada: tarifaBase,
           TotalGanado: totalGanado,
+          Estado: estadoNuevo,
           Synced: 0
         });
       }
@@ -119,6 +137,21 @@ export default function PesajeScreen() {
     } catch (error) {
       console.error("Error al guardar pesaje:", error);
       alert('Error al guardar el registro.');
+    }
+  };
+
+  const cerrarJornada = async () => {
+    if (!transacciones || transacciones.length === 0) return;
+    if (confirm('¿Cerrar jornada? Estos datos pasarán a Contabilidad y ya no se podrán modificar aquí.')) {
+      try {
+        await Promise.all(
+          transacciones.map(t => db.transaccionesPesaje.update(t.Id!, { Estado: 'Cerrado' }))
+        );
+        alert('Jornada cerrada exitosamente. Los datos se han movido a Historial / Contabilidad.');
+      } catch(error) {
+        console.error("Error al cerrar jornada:", error);
+        alert('Hubo un error al cerrar la jornada.');
+      }
     }
   };
 
@@ -144,7 +177,7 @@ export default function PesajeScreen() {
       { header: 'Procedencia', key: 'procedencia', width: 20 },
       { header: 'Bolsas Completas', key: 'bolsas', width: 20 },
       { header: 'Kilos Extras', key: 'kilos', width: 15 },
-      { header: 'Monto Ganado ($)', key: 'monto', width: 22 },
+      { header: `Monto Ganado (${moneda})`, key: 'monto', width: 22 },
     ];
 
     // Estilo de la Cabecera
@@ -181,7 +214,10 @@ export default function PesajeScreen() {
       // Alineaciones y Formatos
       row.getCell('bolsas').alignment = { horizontal: 'center' };
       row.getCell('kilos').alignment = { horizontal: 'center' };
-      row.getCell('monto').numFmt = '"$"#,##0.00'; // Formato de moneda
+      
+      // Si la moneda es C$, exceljs necesita un formato custom
+      const symbol = moneda === 'C$' ? 'C$' : '$';
+      row.getCell('monto').numFmt = `"${symbol}"#,##0.00`; 
       row.getCell('monto').alignment = { horizontal: 'right' };
 
       // Bordes para cada celda
@@ -349,16 +385,27 @@ export default function PesajeScreen() {
           <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-xl h-full flex flex-col">
             <div className="p-6 border-b border-slate-700 bg-slate-800/80 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-white">
-                {productorSeleccionadoId ? `Registros para ${productorSeleccionado?.Nombre}` : 'Seleccione un productor para ver la tabla'}
+                {productorSeleccionadoId ? `Registros Activos para ${productorSeleccionado?.Nombre}` : 'Seleccione un productor para ver la tabla'}
               </h2>
               {productorSeleccionadoId && transacciones && transacciones.length > 0 && (
-                <button
-                  onClick={descargarExcel}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-emerald-900/20"
-                >
-                  <Download size={16} />
-                  Descargar Excel
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={descargarExcel}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-emerald-900/20"
+                  >
+                    <Download size={16} />
+                    Descargar Excel
+                  </button>
+                  {modoCierre === 'Manual' && (
+                    <button
+                      onClick={cerrarJornada}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-indigo-900/20"
+                    >
+                      <Save size={16} />
+                      Cerrar Jornada
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             
@@ -370,7 +417,7 @@ export default function PesajeScreen() {
                     <th className="p-4 font-semibold">Trabajador</th>
                     <th className="p-4 font-semibold text-center">Bolsas</th>
                     <th className="p-4 font-semibold text-center">Kilos Extras</th>
-                    <th className="p-4 font-semibold text-right">Monto Ganado</th>
+                    <th className="p-4 font-semibold text-right">Monto Ganado ({moneda})</th>
                     <th className="p-4 font-semibold text-center">Acciones</th>
                   </tr>
                 </thead>

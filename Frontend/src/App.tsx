@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ConfiguracionScreen from './screens/ConfiguracionScreen';
 import PesajeScreen from './screens/PesajeScreen';
-import { Settings, Home, FileText } from 'lucide-react';
+import HistorialScreen from './screens/HistorialScreen';
+import { Settings, Home, FileText, History } from 'lucide-react';
 
 function App() {
   return (
@@ -20,6 +21,9 @@ function App() {
               <Link to="/pesaje" className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
                 <FileText size={18} /> Línea de Pesaje
               </Link>
+              <Link to="/historial" className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
+                <History size={18} /> Contabilidad / Historial
+              </Link>
               <Link to="/configuracion" className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
                 <Settings size={18} /> Configuración
               </Link>
@@ -32,6 +36,7 @@ function App() {
           <Routes>
             <Route path="/" element={<div className="text-center mt-20"><h1 className="text-4xl font-bold text-white mb-4">Bienvenido a AgroTrack</h1><p className="text-slate-400 text-lg">Selecciona una opción en el menú superior para comenzar.</p></div>} />
             <Route path="/pesaje" element={<PesajeScreen />} />
+            <Route path="/historial" element={<HistorialScreen />} />
             <Route path="/configuracion" element={<ConfiguracionScreen />} />
           </Routes>
         </main>
