@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagrama ERD - AgroTrack Nóminas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 2rem; }
+        .mermaid { display: flex; justify-content: center; margin: 2rem 0; }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="max-w-4xl mx-auto bg-white">
+        <header class="text-center mb-10 pb-6 border-b border-gray-200">
+            <h1 class="text-4xl font-bold text-green-700 mb-2">AgroTrack Nóminas</h1>
+            <p class="text-xl text-gray-500">Documentación de Arquitectura de Software</p>
+        </header>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                <span class="bg-green-100 text-green-700 p-2 rounded mr-3 text-sm">1</span>
+                Diagrama de Entidad-Relación (ERD)
+            </h2>
+            <p class="text-gray-600 mb-6">Este diagrama muestra cómo se relacionan las tablas principales en la base de datos local SQLite para asegurar la trazabilidad.</p>
+            
+            <div id="mermaid-container" class="mermaid bg-slate-50 p-6 rounded-lg border border-slate-200">
+erDiagram
+    Operario {
+        int Id PK
+        string Codigo
+        string Nombre
+        string Productor
+    }
+    
+    TransaccionPesaje {
+        int Id PK
+        int OperarioId FK
+        datetime Fecha
+        decimal PesoBruto
+        decimal BolsasBase
+        decimal KilosExcedentes
+        decimal BolsasExtra
+        decimal TarifaAplicada
+        decimal TotalGanado
+    }
+    
+    ContenedorExportacion {
+        int Id PK
+        string NumeroContenedor
+        string Destino
+        datetime FechaSalida
+    }
+    
+    Lote {
+        int Id PK
+        int ContenedorExportacionId FK
+        string NumeroLote
+        decimal TotalCajas
+        datetime FechaCierre
+    }
+    
+    Operario ||--o{ TransaccionPesaje : "registra"
+    ContenedorExportacion ||--o{ Lote : "contiene"
+    Lote ||--o{ TransaccionPesaje : "incluye"
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#f0fdf4',
+                primaryTextColor: '#166534',
+                primaryBorderColor: '#bbf7d0',
+                lineColor: '#475569',
+                secondaryColor: '#eff6ff',
+                tertiaryColor: '#fff'
+            }
+        });
+        
+        // Add a flag for puppeteer to know it's done
+        setTimeout(() => {
+            const div = document.createElement('div');
+            div.id = 'render-complete';
+            document.body.appendChild(div);
+        }, 1000);
+    </script>
+</body>
+</html>

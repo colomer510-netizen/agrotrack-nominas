@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Diagrama de Clases - AgroTrack Nóminas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 2rem; }
+        .mermaid { display: flex; justify-content: center; margin: 2rem 0; }
+    </style>
+</head>
+<body class="text-gray-800">
+    <div class="max-w-4xl mx-auto bg-white">
+        
+        <header class="text-center mb-10 pb-6 border-b border-gray-200">
+            <h1 class="text-4xl font-bold text-blue-700 mb-2">AgroTrack Nóminas</h1>
+            <p class="text-xl text-gray-500">Documentación de Arquitectura de Software</p>
+        </header>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center mt-10">
+                <span class="bg-blue-100 text-blue-700 p-2 rounded mr-3 text-sm">2</span>
+                Diagrama de Clases (Dominio)
+            </h2>
+            <p class="text-gray-600 mb-6">Representación de la estructura de las clases principales dentro del Clean Architecture (.NET) y los modelos de TypeScript en el Frontend.</p>
+            
+            <div id="mermaid-container" class="mermaid bg-slate-50 p-6 rounded-lg border border-slate-200">
+classDiagram
+    class ContenedorExportacion {
+        int Id
+        string NumeroContenedor
+        string Destino
+        DateTime FechaSalida
+    }
+
+    class Operario {
+        int Id
+        string CodigoInterno
+        string Procedencia
+        string Codigo
+        string Nombre
+        string Productor
+    }
+
+    class TransaccionPesaje {
+        int Id
+        int OperarioId
+        DateTime Fecha
+        string TipoProceso
+        int ConteoBolsas
+        decimal PesoBruto
+        decimal TotalGanado
+    }
+
+    class TsProductor {
+        number Id
+        string Nombre
+        string Codigo
+    }
+
+    class TsOperario {
+        number Id
+        string CodigoInterno
+        string Nombre
+        string Procedencia
+    }
+
+    class TsConfiguracionGlobal {
+        number Id
+        string Clave
+        string Valor
+    }
+
+    class TsTransaccionPesaje {
+        number Id
+        number OperarioId
+        number ProductorId
+        string Fecha
+        string TipoProceso
+        number PesoBruto
+        number TotalGanado
+        string Estado
+    }
+
+    Operario --> TransaccionPesaje : Realiza
+    ContenedorExportacion *-- TransaccionPesaje : Incluye
+    TsProductor --> TsTransaccionPesaje : Pertenece
+    TsOperario --> TsTransaccionPesaje : Registra
+            </div>
+        </section>
+
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#eff6ff',
+                primaryTextColor: '#1d4ed8',
+                primaryBorderColor: '#bfdbfe',
+                lineColor: '#475569',
+                secondaryColor: '#f8fafc',
+                tertiaryColor: '#fff'
+            }
+        });
+        
+        // Add a flag for puppeteer to know it's done
+        setTimeout(() => {
+            const div = document.createElement('div');
+            div.id = 'render-complete';
+            document.body.appendChild(div);
+        }, 1000);
+    </script>
+</body>
+</html>
