@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { db } from '../db';
+import { db, type TransaccionPesaje } from '../db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Calendar, Search, Filter, Download, Briefcase } from 'lucide-react';
+import { Calendar, Filter, Download, Briefcase } from 'lucide-react';
 
 export default function HistorialScreen() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -19,10 +19,10 @@ export default function HistorialScreen() {
   const pesoBolsa = useMemo(() => parseFloat(configuracion?.find(c => c.Clave === 'PESO_BOLSA')?.Valor || '23.0'), [configuracion]);
 
   // Transacciones Cerradas
-  const transacciones = useLiveQuery(
-    () => {
-      if (!productorSeleccionadoId || !fechaSeleccionada) return Promise.resolve([]);
-      return db.transaccionesPesaje
+  const transacciones = useLiveQuery<TransaccionPesaje[]>(
+    async () => {
+      if (!productorSeleccionadoId || !fechaSeleccionada) return [];
+      return await db.transaccionesPesaje
         .where('ProductorId')
         .equals(Number(productorSeleccionadoId))
         .filter(t => t.Estado === 'Cerrado' && t.Fecha.startsWith(fechaSeleccionada))

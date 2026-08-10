@@ -20,10 +20,11 @@ namespace AgroTrack.Presentation.Controllers
         [HttpGet("productor/{nombreProductor}/excel")]
         public async Task<IActionResult> ExportarProductorExcel(string nombreProductor)
         {
-            // Filtrar transacciones por el nombre del productor (ignorando mayúsculas/minúsculas si es posible, aunque EF lo maneja según collation)
+            // Filtrar transacciones por el nombre del productor
             var transacciones = await _context.TransaccionesPesaje
                 .Include(t => t.Operario)
-                .Where(t => t.Operario != null && t.Operario.Productor.ToLower() == nombreProductor.ToLower())
+                .Include(t => t.Productor)
+                .Where(t => t.Productor != null && t.Productor.Nombre.ToLower() == nombreProductor.ToLower())
                 .ToListAsync();
 
             if (!transacciones.Any())
@@ -31,16 +32,16 @@ namespace AgroTrack.Presentation.Controllers
                 // Si no hay en DB, retornamos un mock para la demostración web
                 transacciones = new List<TransaccionPesaje>
                 {
-                    new TransaccionPesaje { Operario = new Operario { Codigo = "S1", Nombre = "ROSMERI ESPINOZA", Productor = nombreProductor }, BolsasBase = 0, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 0 },
-                    new TransaccionPesaje { Operario = new Operario { Codigo = "S3", Nombre = "MARIA MAG RODRIGUEZ", Productor = nombreProductor }, BolsasBase = 11, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 165 },
-                    new TransaccionPesaje { Operario = new Operario { Codigo = "S8", Nombre = "CINDY RODRIGUEZ BALTODANO", Productor = nombreProductor }, BolsasBase = 13, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 195 },
-                    new TransaccionPesaje { Operario = new Operario { Codigo = "S19", Nombre = "ROXANA ESPINOZA", Productor = nombreProductor }, BolsasBase = 28, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 420 }
+                    new TransaccionPesaje { Operario = new Operario { CodigoInterno = "S1", Nombre = "ROSMERI ESPINOZA" }, Productor = new Productor { Nombre = nombreProductor }, BolsasBase = 0, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 0 },
+                    new TransaccionPesaje { Operario = new Operario { CodigoInterno = "S3", Nombre = "MARIA MAG RODRIGUEZ" }, Productor = new Productor { Nombre = nombreProductor }, BolsasBase = 11, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 165 },
+                    new TransaccionPesaje { Operario = new Operario { CodigoInterno = "S8", Nombre = "CINDY RODRIGUEZ BALTODANO" }, Productor = new Productor { Nombre = nombreProductor }, BolsasBase = 13, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 195 },
+                    new TransaccionPesaje { Operario = new Operario { CodigoInterno = "S19", Nombre = "ROXANA ESPINOZA" }, Productor = new Productor { Nombre = nombreProductor }, BolsasBase = 28, KilosExcedentes = 0, BolsasExtra = 0, TotalGanado = 420 }
                 };
             }
 
             // Agrupar por operario
             var agrupado = transacciones
-                .GroupBy(t => t.Operario?.Codigo)
+                .GroupBy(t => t.Operario?.CodigoInterno)
                 .Select(g => new
                 {
                     Codigo = g.Key,

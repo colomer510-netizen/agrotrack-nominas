@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { db } from '../db';
+import { db, type TransaccionPesaje } from '../db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Scale, Save, Trash2, Search, Filter, Download } from 'lucide-react';
 
@@ -28,14 +28,14 @@ export default function PesajeScreen() {
     return configuracion?.find(c => c.Clave === 'MODO_CIERRE')?.Valor || 'Manual';
   }, [configuracion]);
 
-  const transacciones = useLiveQuery(
-    () => productorSeleccionadoId 
-      ? db.transaccionesPesaje
+  const transacciones = useLiveQuery<TransaccionPesaje[]>(
+    async () => productorSeleccionadoId 
+      ? await db.transaccionesPesaje
           .where('ProductorId')
           .equals(Number(productorSeleccionadoId))
           .filter(t => !t.Estado || t.Estado === 'Activo')
           .toArray()
-      : Promise.resolve([]),
+      : [],
     [productorSeleccionadoId]
   );
 
@@ -347,7 +347,7 @@ export default function PesajeScreen() {
                       min="0"
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white text-center font-bold text-xl"
                       value={bolsasCompletas}
-                      onChange={(e) => setBolsasCompletas(e.target.value)}
+                      onChange={(e) => setBolsasCompletas(e.target.value === '' ? '' : Number(e.target.value))}
                     />
                   </div>
                   <div>
@@ -358,7 +358,7 @@ export default function PesajeScreen() {
                       step="0.1"
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500 text-white text-center font-bold text-xl"
                       value={kilosSueltos}
-                      onChange={(e) => setKilosSueltos(e.target.value)}
+                      onChange={(e) => setKilosSueltos(e.target.value === '' ? '' : Number(e.target.value))}
                     />
                   </div>
                 </div>
@@ -457,7 +457,7 @@ export default function PesajeScreen() {
                           {t.KilosExcedentes > 0 ? `+${t.KilosExcedentes} kg` : '-'}
                         </td>
                         <td className="p-4 text-right font-bold text-white text-lg">
-                          <span className="text-slate-500 mr-1">$</span>
+                          <span className="text-slate-500 mr-1">{moneda}</span>
                           {t.TotalGanado.toFixed(2)}
                         </td>
                         <td className="p-4 text-center">
@@ -480,7 +480,7 @@ export default function PesajeScreen() {
             {productorSeleccionadoId && transacciones && transacciones.length > 0 && (
               <div className="bg-slate-900 border-t border-slate-700 p-6 flex justify-between items-center">
                 <div className="text-slate-400">Total Bolsas: <span className="text-emerald-400 font-bold text-xl ml-2">{transacciones.reduce((acc, t) => acc + t.ConteoBolsas, 0)}</span></div>
-                <div className="text-slate-400">Total a Pagar: <span className="text-white font-bold text-2xl ml-2">${transacciones.reduce((acc, t) => acc + t.TotalGanado, 0).toFixed(2)}</span></div>
+                <div className="text-slate-400">Total a Pagar: <span className="text-white font-bold text-2xl ml-2">{moneda} {transacciones.reduce((acc, t) => acc + t.TotalGanado, 0).toFixed(2)}</span></div>
               </div>
             )}
           </div>

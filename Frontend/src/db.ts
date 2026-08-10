@@ -19,7 +19,7 @@ import Dexie, { type Table } from 'dexie';
    Valor: string;
  }
  
- export interface TransaccionPesaje {
+export interface TransaccionPesaje {
   Id?: number;
   OperarioId: number;
   ProductorId: number;
@@ -36,11 +36,23 @@ import Dexie, { type Table } from 'dexie';
   Synced: number;
 }
 
+export interface ContenedorExportacion {
+  Id?: number;
+  NumeroContenedor: string;
+  Destino: string;
+  FechaSalida: string;
+  TotalKilos: number;
+  TotalCajas: number;
+  Estado: 'Preparando' | 'Cargado' | 'Enviado';
+  Synced?: number;
+}
+
 export class AgroTrackDB extends Dexie {
   productores!: Table<Productor>;
   operarios!: Table<Operario>;
   configuracionGlobal!: Table<ConfiguracionGlobal>;
   transaccionesPesaje!: Table<TransaccionPesaje>;
+  contenedores!: Table<ContenedorExportacion>;
 
   constructor() {
     super('AgroTrackDB');
@@ -72,6 +84,22 @@ export class AgroTrackDB extends Dexie {
       
       if (toAdd.length > 0) {
         await tx.table('configuracionGlobal').bulkAdd(toAdd);
+      }
+    });
+
+    // Actualización de versión 3 (Módulo de Exportación y Sync Tracking)
+    this.version(3).stores({
+      contenedores: '++Id, NumeroContenedor, Estado, Synced'
+    });
+
+    // Hooks para rastrear modificaciones y marcar como pendientes de sincronización (Synced = 0)
+    this.transaccionesPesaje.hook('creating', (_primKey, obj: any, _transaction) => {
+      obj.Synced = 0;
+    });
+    this.transaccionesPesaje.hook('updating', (mods: any, _primKey, _obj, _transaction) => {
+      // Si el update no es del propio SyncService, lo marcamos como desincronizado
+      if (mods.Synced !== 1) {
+        return { Synced: 0 };
       }
     });
   }

@@ -2,3 +2,16 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# AgroTrack Monitor logs y scripts temporales
+logs/
+*.tmp
+
+# .NET Core
+[Bb]in/
+[Oo]bj/
+
+# Bases de datos SQLite locales
+*.db
+*.db-shm
+*.db-wal

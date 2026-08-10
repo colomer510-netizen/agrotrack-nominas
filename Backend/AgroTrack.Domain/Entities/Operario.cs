@@ -10,9 +10,7 @@ namespace AgroTrack.Domain.Entities
         // Procedencia para agruparlos (ej. "SANCHEZ 1", "SANCHEZ 2")
         public string Procedencia { get; set; } = string.Empty;
         
-        public string Codigo { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
-        public string Productor { get; set; } = string.Empty;
         
         public ICollection<TransaccionPesaje> Transacciones { get; set; } = new List<TransaccionPesaje>();
     }

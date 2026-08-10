@@ -28,41 +28,60 @@
 erDiagram
     Operario {
         int Id PK
-        string Codigo
+        string CodigoInterno
         string Nombre
-        string Productor
+        string Procedencia
     }
     
+    Productor {
+        int Id PK
+        string Codigo
+        string Nombre
+    }
+
     TransaccionPesaje {
         int Id PK
         int OperarioId FK
+        int ProductorId FK
         datetime Fecha
+        string TipoProceso
+        int ConteoBolsas
         decimal PesoBruto
         decimal BolsasBase
         decimal KilosExcedentes
         decimal BolsasExtra
         decimal TarifaAplicada
         decimal TotalGanado
+        string Estado
+        int Synced
     }
     
     ContenedorExportacion {
         int Id PK
-        string NumeroContenedor
+        decimal KilosEstimados
+        int CajasEstimadas
         string Destino
-        datetime FechaSalida
+        datetime FechaCreacion
+        string PackingListRef
     }
     
-    Lote {
+    ConfiguracionGlobal {
         int Id PK
-        int ContenedorExportacionId FK
-        string NumeroLote
-        decimal TotalCajas
-        datetime FechaCierre
+        string Clave
+        string Valor
+    }
+
+    LedgerTrazabilidad {
+        int Id PK
+        string TLC
+        string EventoTipo
+        string Descripcion
+        string RegistradoPor
+        datetime Timestamp
     }
     
     Operario ||--o{ TransaccionPesaje : "registra"
-    ContenedorExportacion ||--o{ Lote : "contiene"
-    Lote ||--o{ TransaccionPesaje : "incluye"
+    Productor ||--o{ TransaccionPesaje : "posee"
             </div>
         </section>
     </div>

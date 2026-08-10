@@ -10,50 +10,50 @@ Representación de la estructura de las clases principales dentro del Clean Arch
 classDiagram
     class ContenedorExportacion {
         +int Id
-        +string NumeroContenedor
+        +decimal KilosEstimados
+        +int CajasEstimadas
         +string Destino
-        +DateTime FechaSalida
+        +DateTime FechaCreacion
+        +string PackingListRef
     }
 
     class Operario {
         +int Id
         +string CodigoInterno
+        +string Nombre
         +string Procedencia
+    }
+    
+    class Productor {
+        +int Id
         +string Codigo
         +string Nombre
-        +string Productor
     }
 
     class TransaccionPesaje {
         +int Id
         +int OperarioId
+        +int ProductorId
         +DateTime Fecha
         +string TipoProceso
         +int ConteoBolsas
         +decimal PesoBruto
+        +decimal BolsasBase
+        +decimal KilosExcedentes
+        +decimal BolsasExtra
+        +decimal TarifaAplicada
         +decimal TotalGanado
+        +string Estado
+        +int Synced
     }
-
-    class TsProductor {
-        <<interface>>
-        +number Id
-        +string Nombre
-        +string Codigo
-    }
-
-    class TsOperario {
-        <<interface>>
-        +number Id
-        +string CodigoInterno
-        +string Nombre
-        +string Procedencia
-    }
-
-    class TsConfiguracionGlobal {
-        <<interface>>
-        +number Id
-        +string Clave
-        +string Valor
+    
+    class LedgerTrazabilidad {
+        +int Id
+        +string TLC
+        +string EventoTipo
+        +string Descripcion
+        +string RegistradoPor
+        +DateTime Timestamp
     }
 
     class TsTransaccionPesaje {
@@ -63,13 +63,17 @@ classDiagram
         +number ProductorId
         +string Fecha
         +string TipoProceso
+        +number ConteoBolsas
         +number PesoBruto
+        +number BolsasBase
+        +number KilosExcedentes
+        +number BolsasExtra
+        +number TarifaAplicada
         +number TotalGanado
         +string Estado
+        +number Synced
     }
 
     Operario --> TransaccionPesaje : Realiza
-    ContenedorExportacion *-- TransaccionPesaje : Incluye
-    TsProductor --> TsTransaccionPesaje : Pertenece
-    TsOperario --> TsTransaccionPesaje : Registra
+    Productor --> TransaccionPesaje : Pertenece
 ```

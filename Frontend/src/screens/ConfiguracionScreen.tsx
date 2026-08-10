@@ -77,7 +77,16 @@ export default function ConfiguracionScreen() {
   };
 
   const eliminarProductor = async (id?: number) => {
-    if (id) await db.productores.delete(id);
+    if (!id) return;
+    const transacciones = await db.transaccionesPesaje
+      .where('ProductorId').equals(id).count();
+    if (transacciones > 0) {
+      alert(`No se puede eliminar: este productor tiene ${transacciones} registro(s) de pesaje vinculados. Elimine los registros primero.`);
+      return;
+    }
+    if (confirm('¿Estás seguro de eliminar este productor?')) {
+      await db.productores.delete(id);
+    }
   };
 
   const agregarOperario = async () => {
@@ -93,7 +102,16 @@ export default function ConfiguracionScreen() {
   };
 
   const eliminarOperario = async (id?: number) => {
-    if (id) await db.operarios.delete(id);
+    if (!id) return;
+    const transacciones = await db.transaccionesPesaje
+      .where('OperarioId').equals(id).count();
+    if (transacciones > 0) {
+      alert(`No se puede eliminar: este trabajador tiene ${transacciones} registro(s) de pesaje vinculados. Elimine los registros primero.`);
+      return;
+    }
+    if (confirm('¿Estás seguro de eliminar este trabajador?')) {
+      await db.operarios.delete(id);
+    }
   };
 
   return (
