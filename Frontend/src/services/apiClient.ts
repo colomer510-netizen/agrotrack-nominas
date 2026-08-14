@@ -1,3 +1,7 @@
+// Copyright (C) 2026 colomer510-netizen
+// This file is part of AgroTrack Nóminas.
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE in project root.
+
 /**
  * AgroTrack — Cliente HTTP centralizado para comunicación con el Backend .NET API.
  * Maneja reintentos, timeouts y detección de conectividad.
@@ -114,11 +118,6 @@ class ApiClient {
     });
   }
 
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
-  }
 }
 
-// Singleton exportado
 export const apiClient = new ApiClient();
-export type { ApiResponse };

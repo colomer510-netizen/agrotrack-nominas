@@ -1,3 +1,7 @@
+// Copyright (C) 2026 colomer510-netizen
+// This file is part of AgroTrack Nóminas.
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE in project root.
+
 import Dexie, { type Table } from 'dexie';
  
  export interface Productor {
@@ -89,43 +93,3 @@ export class AgroTrackDB extends Dexie {
 
     // Actualización de versión 3 (Módulo de Exportación y Sync Tracking)
     this.version(3).stores({
-      contenedores: '++Id, NumeroContenedor, Estado, Synced'
-    });
-
-    // Hooks para rastrear modificaciones y marcar como pendientes de sincronización (Synced = 0)
-    this.transaccionesPesaje.hook('creating', (_primKey, obj: any, _transaction) => {
-      obj.Synced = 0;
-    });
-    this.transaccionesPesaje.hook('updating', (mods: any, _primKey, _obj, _transaction) => {
-      // Si el update no es del propio SyncService, lo marcamos como desincronizado
-      if (mods.Synced !== 1) {
-        return { Synced: 0 };
-      }
-    });
-  }
-}
- 
- export const db = new AgroTrackDB();
- 
- // Seed inicial de configuración
- db.on('populate', async () => {
-   await db.configuracionGlobal.bulkAdd([
-     { Clave: 'PESO_BOLSA', Valor: '23.0' },
-     { Clave: 'TARIFA_BASE', Valor: '15.0' },
-     { Clave: 'MONEDA', Valor: 'C$' },
-     { Clave: 'PAGO_PRODUCTOR_BOLSA', Valor: '0' },
-     { Clave: 'MODO_CIERRE', Valor: 'Manual' }
-   ]);
- 
-   // Productores Demo
-   await db.productores.bulkAdd([
-     { Nombre: 'Productor Demo 1', Codigo: 'PROD-1' }
-   ]);
-   
-   // Operarios Demo
-   await db.operarios.bulkAdd([
-       { CodigoInterno: 'S 1', Nombre: 'ROSMERI ESPINOZA', Procedencia: 'SANCHEZ 2' },
-       { CodigoInterno: 'S 2', Nombre: 'RITA E. RODRIGUEZ', Procedencia: 'SANCHEZ 2' },
-       { CodigoInterno: 'SL 1', Nombre: 'IDANIA ARIAS', Procedencia: 'SANCHEZ 1' }
-   ]);
- });

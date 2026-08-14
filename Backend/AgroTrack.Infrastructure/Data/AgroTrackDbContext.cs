@@ -1,3 +1,7 @@
+// Copyright (C) 2026 colomer510-netizen
+// This file is part of AgroTrack Nóminas.
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE in project root.
+
 using AgroTrack.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -79,31 +83,3 @@ namespace AgroTrack.Infrastructure.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.TLC).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.EventoTipo).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.Descripcion).HasMaxLength(500);
-                entity.Property(e => e.RegistradoPor).HasMaxLength(100);
-                entity.HasIndex(e => e.TLC);
-                entity.HasIndex(e => e.Timestamp);
-            });
-
-            // ── Seed Data ──
-            modelBuilder.Entity<ConfiguracionGlobal>().HasData(
-                new ConfiguracionGlobal { Id = 1, Clave = "PESO_BOLSA", Valor = "23.0" },
-                new ConfiguracionGlobal { Id = 2, Clave = "TARIFA_BASE", Valor = "15.0" },
-                new ConfiguracionGlobal { Id = 3, Clave = "MONEDA", Valor = "C$" },
-                new ConfiguracionGlobal { Id = 4, Clave = "PAGO_PRODUCTOR_BOLSA", Valor = "0" },
-                new ConfiguracionGlobal { Id = 5, Clave = "MODO_CIERRE", Valor = "Manual" }
-            );
-
-            modelBuilder.Entity<Productor>().HasData(
-                new Productor { Id = 1, Codigo = "PROD-1", Nombre = "Productor Demo 1" }
-            );
-
-            modelBuilder.Entity<Operario>().HasData(
-                new Operario { Id = 1, CodigoInterno = "S 1", Nombre = "ROSMERI ESPINOZA", Procedencia = "SANCHEZ 2" },
-                new Operario { Id = 2, CodigoInterno = "S 2", Nombre = "RITA E. RODRIGUEZ", Procedencia = "SANCHEZ 2" },
-                new Operario { Id = 3, CodigoInterno = "SL 1", Nombre = "IDANIA ARIAS", Procedencia = "SANCHEZ 1" }
-            );
-        }
-    }
-}

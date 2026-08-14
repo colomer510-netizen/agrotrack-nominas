@@ -1,3 +1,7 @@
+// Copyright (C) 2026 colomer510-netizen
+// This file is part of AgroTrack Nóminas.
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE in project root.
+
 using Microsoft.AspNetCore.Mvc;
 using ClosedXML.Excel;
 using AgroTrack.Domain.Entities;
@@ -56,57 +60,3 @@ namespace AgroTrack.Presentation.Controllers
 
             using var workbook = new XLWorkbook();
             // Nombre de la hoja (validando longitud por limitación de Excel de 31 caracteres)
-            string sheetName = nombreProductor.Length > 31 ? nombreProductor.Substring(0, 31) : nombreProductor;
-            var worksheet = workbook.Worksheets.Add(sheetName);
-
-            // Estilos generales
-            worksheet.Style.Font.FontName = "Arial";
-            worksheet.Style.Font.FontSize = 11;
-
-            // Fila 1 y 2: Cabecera
-            worksheet.Cell(1, 1).Value = $"Productor: {nombreProductor}";
-            worksheet.Cell(1, 1).Style.Font.Bold = true;
-            worksheet.Cell(1, 1).Style.Font.FontSize = 14;
-
-            worksheet.Cell(2, 1).Value = $"Total de Bolsas del Productor: {Math.Round(totalBolsasGlobal, 2)}";
-            worksheet.Cell(2, 1).Style.Font.Bold = true;
-
-            // Fila 4: Cabeceras de la tabla
-            worksheet.Cell(4, 1).Value = "Código de Persona";
-            worksheet.Cell(4, 2).Value = "Nombre del Trabajador";
-            worksheet.Cell(4, 3).Value = "Bolsas Peladas";
-            worksheet.Cell(4, 4).Value = "Kilos Excedentes";
-            worksheet.Cell(4, 5).Value = "Total a Pagar (C$)";
-
-            var headerRange = worksheet.Range("A4:E4");
-            headerRange.Style.Font.Bold = true;
-            headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-            headerRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
-
-            // Llenado de datos desde fila 5
-            int row = 5;
-            foreach (var item in agrupado)
-            {
-                worksheet.Cell(row, 1).Value = item.Codigo;
-                worksheet.Cell(row, 2).Value = item.Nombre;
-                worksheet.Cell(row, 3).Value = item.BolsasTotales;
-                worksheet.Cell(row, 4).Value = item.KilosExcedentes;
-                worksheet.Cell(row, 5).Value = item.TotalPagar;
-                
-                // Formato de moneda para la última columna
-                worksheet.Cell(row, 5).Style.NumberFormat.Format = "C$ #,##0.00";
-                
-                row++;
-            }
-
-            // Autoajustar columnas
-            worksheet.Columns().AdjustToContents();
-
-            using var stream = new MemoryStream();
-            workbook.SaveAs(stream);
-            var content = stream.ToArray();
-
-            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Reporte_{nombreProductor.Replace(" ", "_")}.xlsx");
-        }
-    }
-}

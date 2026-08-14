@@ -1,3 +1,7 @@
+// Copyright (C) 2026 colomer510-netizen
+// This file is part of AgroTrack Nóminas.
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE in project root.
+
 using AgroTrack.Domain.Entities;
 using AgroTrack.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -86,17 +90,3 @@ namespace AgroTrack.Application.Services
                 OperarioId = operarioId,
                 ProductorId = productorId,
                 Fecha = DateTime.UtcNow,
-                TipoProceso = "Pelado",
-                ConteoBolsas = bolsasCompletas,
-                PesoBruto = kilosTotales,
-                BolsasBase = bolsasCompletas,
-                KilosExcedentes = kilosSueltos,
-                BolsasExtra = 0,
-                TarifaAplicada = tarifaBase,
-                TotalGanado = Math.Round(totalGanado, 2),
-                Estado = "Activo",
-                Synced = 1
-            };
-        }
-    }
-}

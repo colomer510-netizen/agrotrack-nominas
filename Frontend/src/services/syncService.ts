@@ -1,3 +1,7 @@
+// Copyright (C) 2026 colomer510-netizen
+// This file is part of AgroTrack Nóminas.
+// Licensed under the GNU Affero General Public License v3.0. See LICENSE in project root.
+
 /**
  * AgroTrack — Servicio de Sincronización Offline-First
  * 
@@ -92,87 +96,3 @@ class SyncService {
       // Productores
       const prodResponse = await apiClient.get<Productor[]>('/productores');
       if (prodResponse.ok && prodResponse.data) {
-        for (const prod of prodResponse.data) {
-          const existing = await db.productores.where('Codigo').equals(prod.Codigo).first();
-          if (!existing) {
-            await db.productores.add({ Nombre: prod.Nombre, Codigo: prod.Codigo });
-            pulled++;
-          }
-        }
-      }
-
-      // Operarios
-      const opResponse = await apiClient.get<Operario[]>('/operarios');
-      if (opResponse.ok && opResponse.data) {
-        for (const op of opResponse.data) {
-          const existing = await db.operarios.where('CodigoInterno').equals(op.CodigoInterno).first();
-          if (!existing) {
-            await db.operarios.add({ Nombre: op.Nombre, CodigoInterno: op.CodigoInterno, Procedencia: op.Procedencia });
-            pulled++;
-          }
-        }
-      }
-
-      // Configuración
-      const confResponse = await apiClient.get<ConfiguracionGlobal[]>('/configuracion');
-      if (confResponse.ok && confResponse.data) {
-        for (const conf of confResponse.data) {
-          const existing = await db.configuracionGlobal.where('Clave').equals(conf.Clave).first();
-          if (existing && existing.Id) {
-            await db.configuracionGlobal.update(existing.Id, { Valor: conf.Valor });
-          } else {
-            await db.configuracionGlobal.add({ Clave: conf.Clave, Valor: conf.Valor });
-          }
-          pulled++;
-        }
-      }
-
-      const result: SyncResult = { success: true, pushed, pulled, errors, timestamp: new Date() };
-      this.notify(result);
-      return result;
-
-    } catch (err: any) {
-      errors.push(err.message || 'Error inesperado en sincronización.');
-      const result: SyncResult = { success: false, pushed, pulled, errors, timestamp: new Date() };
-      this.notify(result);
-      return result;
-    } finally {
-      this.isSyncing = false;
-    }
-  }
-
-  /**
-   * Inicia sincronización automática periódica.
-   */
-  startAutoSync(intervalMs: number = 60000): () => void {
-    const interval = setInterval(() => {
-      if (navigator.onLine) {
-        this.sync().catch(console.error);
-      }
-    }, intervalMs);
-
-    // Sincronizar cuando se recupera la conexión
-    const onOnline = () => {
-      console.log('[SyncService] Conexión recuperada, sincronizando...');
-      this.sync().catch(console.error);
-    };
-    window.addEventListener('online', onOnline);
-
-    // Cleanup
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('online', onOnline);
-    };
-  }
-
-  /**
-   * Obtiene el conteo de registros pendientes de sincronización.
-   */
-  async getPendingCount(): Promise<number> {
-    return db.transaccionesPesaje.where('Synced').equals(0).count();
-  }
-}
-
-// Singleton exportado
-export const syncService = new SyncService();
-export type { SyncResult };
